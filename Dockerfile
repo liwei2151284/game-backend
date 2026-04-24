@@ -19,5 +19,5 @@ RUN composer config -g repo.packagist composer ${JFROG_COMPOSER_REPO} \
     && composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader
 
 COPY . .
-
+ 
 EXPOSE 80
