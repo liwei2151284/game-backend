@@ -1,0 +1,10 @@
+{
+    "name": "stub/indirect-vuln-package",
+    "description": "SCA test stub: forces guzzlehttp/psr7 to downgrade into CVE-2023-29197 range (<2.4.5)",
+    "type": "library",
+    "version": "1.0.0",
+    "license": "MIT",
+    "require": {
+        "guzzlehttp/psr7": ">=2.1,<2.4.5"
+    }
+}

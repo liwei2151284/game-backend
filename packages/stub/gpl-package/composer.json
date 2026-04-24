@@ -1,0 +1,8 @@
+{
+    "name": "stub/gpl-package",
+    "description": "SCA test stub: GPL-2.0-only license scenario",
+    "type": "library",
+    "version": "1.0.0",
+    "license": "GPL-2.0-only",
+    "require": {}
+}

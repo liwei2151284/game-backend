@@ -1,0 +1,8 @@
+{
+    "name": "stub/commons-clause-package",
+    "description": "SCA test stub: Apache-2.0 WITH Commons-Clause license scenario",
+    "type": "library",
+    "version": "1.0.0",
+    "license": "Apache-2.0 WITH Commons-Clause",
+    "require": {}
+}

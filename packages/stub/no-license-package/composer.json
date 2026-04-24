@@ -1,0 +1,7 @@
+{
+    "name": "stub/no-license-package",
+    "description": "SCA test stub: no license field declared",
+    "type": "library",
+    "version": "1.0.0",
+    "require": {}
+}
